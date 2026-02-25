@@ -120,11 +120,16 @@ class MQTTHandler:
         
         try:
             if completed:
-                resp = self.pending_requests[trace_id]["response"]
+                resp = self.pending_requests[trace_id].get("response", {})
+                if resp is None:
+                    return ""
                 return resp.get("Response", resp.get("response", ""))
             else:
                 logger.error(f"LLM request timed out after {timeout}s")
                 return "Error: LLM request timed out."
+        except Exception as e:
+            logger.error(f"Failed to parse completed LLM request: {e}")
+            return ""
         finally:
             if trace_id in self.pending_requests:
                 del self.pending_requests[trace_id]

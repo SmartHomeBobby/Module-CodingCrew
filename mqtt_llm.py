@@ -42,7 +42,7 @@ class MQTTLLM(BaseChatModel):
         )
         
         # Manually enforce stop words since MQTT payload doesn't support them natively
-        if stop is not None and len(stop) > 0:
+        if stop is not None and len(stop) > 0 and response:
             first_stop_idx = len(response)
             for stop_word in stop:
                 idx = response.find(stop_word)
@@ -51,6 +51,9 @@ class MQTTLLM(BaseChatModel):
             if first_stop_idx < len(response):
                 logger.debug(f"Truncated response from len {len(response)} to {first_stop_idx} due to stop word")
                 response = response[:first_stop_idx]
+                
+        if not response:
+            response = "Error: Invalid or empty response from MQTT LLM layer."
         
         generation = ChatGeneration(message=AIMessage(content=response))
         return ChatResult(generations=[generation])
@@ -70,6 +73,8 @@ class MQTTLLM(BaseChatModel):
                 formatted_messages.append(AIMessage(content=msg))
                 
         result = self._generate(messages=formatted_messages, **kwargs)
+        if not result or not result.generations or not result.generations[0].message.content:
+            return "Error: Empty or invalid fallback generation."
         return result.generations[0].message.content
         
     def supports_stop_words(self) -> bool:
