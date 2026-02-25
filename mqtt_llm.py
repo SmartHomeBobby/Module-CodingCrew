@@ -15,7 +15,7 @@ class MQTTLLM(BaseChatModel):
     request_topic: str
     request_type: int = 0
     priority: int = 2
-    timeout: int = 300
+    timeout: int = 600
     stop: Optional[List[str]] = None
     
     @property

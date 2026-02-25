@@ -96,7 +96,7 @@ class MQTTHandler:
         except Exception as e:
             logger.error(f"Error parsing incoming message on {msg.topic}: {e}")
 
-    def ask_llm(self, topic: str, request_text: str, request_type: int = 0, priority: int = 2, timeout: int = 300) -> str:
+    def ask_llm(self, topic: str, request_text: str, request_type: int = 0, priority: int = 2, timeout: int = 600) -> str:
         trace_id = str(uuid.uuid4())
         event_id = str(uuid.uuid4())
         
