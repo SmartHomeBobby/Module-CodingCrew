@@ -34,6 +34,15 @@ def create_coding_crew(
     )
     execution_tool = CommandExecutionTool()
     
+    # --- CREWAI 0.100+ CUSTOM LLM HOTFIX ---
+    # Newer versions of CrewAI aggressively intercept custom LangChain objects and try to coerce 
+    # them into LiteLLM wrappers (which crashes looking for OpenAI keys). 
+    # We monkey-patch the internal factory to skip validation and accept our MQTTLLM natively.
+    def bypass_llm(llms, **kwargs): return llms
+    import crewai.agent.core
+    crewai.agent.core.create_llm = bypass_llm
+    # ---------------------------------------
+    
     from github_tools import CreateGithubRepoTool
     github_tool = CreateGithubRepoTool()
     
