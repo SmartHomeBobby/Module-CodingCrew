@@ -29,9 +29,6 @@ class MQTTLLM(BaseChatModel):
         run_manager: Optional[Any] = None,
         **kwargs: Any,
     ) -> ChatResult:
-        if stop is not None and len(stop) > 0:
-            logger.warning("Stop sequences are not currently supported by MQTTLLM. They will be ignored.")
-            
         # Compile messages into a single prompt string for the custom LLM Module
         prompt = "\n".join([f"{msg.type.capitalize()}: {msg.content}" for msg in messages])
             
@@ -43,6 +40,17 @@ class MQTTLLM(BaseChatModel):
             priority=self.priority,
             timeout=self.timeout
         )
+        
+        # Manually enforce stop words since MQTT payload doesn't support them natively
+        if stop is not None and len(stop) > 0:
+            first_stop_idx = len(response)
+            for stop_word in stop:
+                idx = response.find(stop_word)
+                if idx != -1 and idx < first_stop_idx:
+                    first_stop_idx = idx
+            if first_stop_idx < len(response):
+                logger.debug(f"Truncated response from len {len(response)} to {first_stop_idx} due to stop word")
+                response = response[:first_stop_idx]
         
         generation = ChatGeneration(message=AIMessage(content=response))
         return ChatResult(generations=[generation])
@@ -65,4 +73,4 @@ class MQTTLLM(BaseChatModel):
         return result.generations[0].message.content
         
     def supports_stop_words(self) -> bool:
-        return False
+        return True
