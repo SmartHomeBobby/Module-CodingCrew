@@ -1,6 +1,6 @@
 import logging
 from typing import Any, List, Optional
-from langchain.llms.base import LLM
+from langchain_core.language_models.llms import LLM
 
 logger = logging.getLogger(__name__)
 
