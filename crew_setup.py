@@ -1,6 +1,6 @@
 import logging
 from crewai import Agent, Task, Crew, Process
-from langchain.tools import tool
+from crewai.tools import tool
 
 from mqtt_handler import MQTTHandler
 from mqtt_llm import MQTTLLM
