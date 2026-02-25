@@ -1,8 +1,8 @@
-crewai==0.36.0
-crewai[tools]==0.36.0
-langchain>=0.2.0
-langchain-core>=0.2.0
-pydantic>=2.4.2
-paho-mqtt>=2.0.0
-PyGithub>=2.0.0
-python-dotenv>=1.0.0
+crewai
+crewai[tools]
+langchain
+langchain-core
+pydantic
+paho-mqtt
+PyGithub
+python-dotenv

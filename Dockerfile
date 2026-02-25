@@ -31,9 +31,10 @@ RUN apt-get update && apt-get install -y dotnet-sdk-8.0 \
 # Install Flutter SDK
 ENV FLUTTER_HOME=/opt/flutter
 ENV PATH=${PATH}:${FLUTTER_HOME}/bin
-RUN git clone https://github.com/flutter/flutter.git -b stable ${FLUTTER_HOME}
-# Pre-download Flutter binaries
-RUN flutter precache --web --linux
+# Use a shallow clone to massively speed up the download
+RUN git clone --depth 1 --single-branch -b stable https://github.com/flutter/flutter.git ${FLUTTER_HOME}
+# Pre-download core Flutter binaries only (skipping large web/linux specific caches)
+RUN flutter precache
 
 # Create a non-root user to avoid running Flutter as root (which is frowned upon)
 RUN useradd -ms /bin/bash crew_user
@@ -44,7 +45,8 @@ WORKDIR /app
 
 # Copy the requirements file and install python dependencies
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
 COPY . /app
