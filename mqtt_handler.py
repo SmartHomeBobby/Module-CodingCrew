@@ -7,6 +7,7 @@ import paho.mqtt.client as mqtt
 
 logger = logging.getLogger(__name__)
 
+
 class MQTTHandler:
     _instance = None
     _lock = threading.Lock()
@@ -29,37 +30,40 @@ class MQTTHandler:
     ):
         if self._initialized:
             return
-            
+
         self.broker = broker
         self.port = port
         self.user = user
         self.password = password
-        
+
         self.llm_response_topic = llm_response_topic
         self.decision_response_topic = decision_response_topic
-        
+
         # Maps trace_id -> {"event": threading.Event(), "response": dict}
         self.pending_requests = {}
         self.pending_decisions = {}
-        
+
         self.client_id = f"crewai_agent_{uuid.uuid4().hex[:8]}"
-        
+
         try:
             from paho.mqtt.client import CallbackAPIVersion
-            self.client = mqtt.Client(CallbackAPIVersion.VERSION2, client_id=self.client_id, clean_session=True)
+            self.client = mqtt.Client(
+                CallbackAPIVersion.VERSION2, client_id=self.client_id, clean_session=True)
         except Exception:
-            self.client = mqtt.Client(client_id=self.client_id, clean_session=True)
-            
+            self.client = mqtt.Client(
+                client_id=self.client_id, clean_session=True)
+
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        
+
         if self.user and self.password:
             self.client.username_pw_set(self.user, self.password)
-            
+
         self._initialized = True
 
     def start(self):
-        logger.info(f"Connecting to MQTT broker at {self.broker}:{self.port}...")
+        logger.info(
+            f"Connecting to MQTT broker at {self.broker}:{self.port}...")
         self.client.connect(self.broker, self.port, 60)
         self.client.loop_start()
 
@@ -78,28 +82,28 @@ class MQTTHandler:
     def on_message(self, client, userdata, msg):
         try:
             payload = json.loads(msg.payload.decode('utf-8'))
-            
+
             if msg.topic == self.llm_response_topic:
                 trace_id = payload.get("TraceId", payload.get("traceId"))
                 if trace_id and trace_id in self.pending_requests:
                     req = self.pending_requests[trace_id]
                     req["response"] = payload
                     req["event"].set()
-                    
+
             elif msg.topic == self.decision_response_topic:
                 event_id = payload.get("EventId", payload.get("eventId"))
                 if event_id and event_id in self.pending_decisions:
                     dec = self.pending_decisions[event_id]
                     dec["response"] = payload
                     dec["event"].set()
-                    
+
         except Exception as e:
             logger.error(f"Error parsing incoming message on {msg.topic}: {e}")
 
-    def ask_llm(self, topic: str, request_text: str, request_type: int = 0, priority: int = 2, timeout: int = 600) -> str:
+    def ask_llm(self, topic: str, request_text: str, request_type: int = 0, priority: int = 2, timeout: int = 3600) -> str:
         trace_id = str(uuid.uuid4())
         event_id = str(uuid.uuid4())
-        
+
         payload = {
             "TraceId": trace_id,
             "EventId": event_id,
@@ -109,15 +113,16 @@ class MQTTHandler:
             "RequestType": request_type,
             "Request": request_text
         }
-        
+
         event = threading.Event()
         self.pending_requests[trace_id] = {"event": event, "response": None}
-        
-        logger.debug(f"Publishing LLM request to {topic} with trace_id {trace_id}")
+
+        logger.debug(
+            f"Publishing LLM request to {topic} with trace_id {trace_id}")
         self.client.publish(topic, json.dumps(payload), qos=2)
-        
+
         completed = event.wait(timeout)
-        
+
         try:
             if completed:
                 resp = self.pending_requests[trace_id].get("response", {})
@@ -137,7 +142,7 @@ class MQTTHandler:
     def ask_stakeholder(self, topic: str, question: str, context: str, timeout: int = 3600) -> str:
         trace_id = str(uuid.uuid4())
         event_id = str(uuid.uuid4())
-        
+
         payload = {
             "TraceId": trace_id,
             "EventId": event_id,
@@ -147,15 +152,15 @@ class MQTTHandler:
             "Question": question,
             "Context": context
         }
-        
+
         event = threading.Event()
         self.pending_decisions[event_id] = {"event": event, "response": None}
-        
+
         logger.info(f"Asking stakeholder: {question}")
         self.client.publish(topic, json.dumps(payload), qos=2)
-        
+
         completed = event.wait(timeout)
-        
+
         try:
             if completed:
                 resp = self.pending_decisions[event_id]["response"]

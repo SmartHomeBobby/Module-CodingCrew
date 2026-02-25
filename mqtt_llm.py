@@ -6,6 +6,7 @@ from langchain_core.outputs import ChatResult, ChatGeneration
 
 logger = logging.getLogger(__name__)
 
+
 class MQTTLLM(BaseChatModel):
     """
     Custom LangChain Chat Model wrapper that routes requests to an MQTT topic
@@ -15,9 +16,9 @@ class MQTTLLM(BaseChatModel):
     request_topic: str
     request_type: int = 0
     priority: int = 2
-    timeout: int = 600
+    timeout: int = 3600
     stop: Optional[List[str]] = None
-    
+
     @property
     def _llm_type(self) -> str:
         return "mqtt_chat_model"
@@ -30,8 +31,9 @@ class MQTTLLM(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         # Compile messages into a single prompt string for the custom LLM Module
-        prompt = "\n".join([f"{msg.type.capitalize()}: {msg.content}" for msg in messages])
-            
+        prompt = "\n".join(
+            [f"{msg.type.capitalize()}: {msg.content}" for msg in messages])
+
         logger.debug(f"Sending prompt to LLM via MQTT: {prompt[:100]}...")
         response = self.mqtt_handler.ask_llm(
             topic=self.request_topic,
@@ -40,7 +42,7 @@ class MQTTLLM(BaseChatModel):
             priority=self.priority,
             timeout=self.timeout
         )
-        
+
         # Manually enforce stop words since MQTT payload doesn't support them natively
         if stop is not None and len(stop) > 0 and response:
             first_stop_idx = len(response)
@@ -49,12 +51,13 @@ class MQTTLLM(BaseChatModel):
                 if idx != -1 and idx < first_stop_idx:
                     first_stop_idx = idx
             if first_stop_idx < len(response):
-                logger.debug(f"Truncated response from len {len(response)} to {first_stop_idx} due to stop word")
+                logger.debug(
+                    f"Truncated response from len {len(response)} to {first_stop_idx} due to stop word")
                 response = response[:first_stop_idx]
-                
+
         if not response:
             response = "Error: Invalid or empty response from MQTT LLM layer."
-        
+
         generation = ChatGeneration(message=AIMessage(content=response))
         return ChatResult(generations=[generation])
 
@@ -71,11 +74,11 @@ class MQTTLLM(BaseChatModel):
                 formatted_messages.append(AIMessage(content=msg["content"]))
             elif isinstance(msg, str):
                 formatted_messages.append(AIMessage(content=msg))
-                
+
         result = self._generate(messages=formatted_messages, **kwargs)
         if not result or not result.generations or not result.generations[0].message.content:
             return "Error: Empty or invalid fallback generation."
         return result.generations[0].message.content
-        
+
     def supports_stop_words(self) -> bool:
         return True
