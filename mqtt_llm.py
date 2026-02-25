@@ -16,6 +16,7 @@ class MQTTLLM(BaseChatModel):
     request_type: int = 0
     priority: int = 2
     timeout: int = 300
+    stop: Optional[List[str]] = None
     
     @property
     def _llm_type(self) -> str:
