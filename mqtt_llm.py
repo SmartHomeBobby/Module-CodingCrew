@@ -46,3 +46,23 @@ class MQTTLLM(BaseChatModel):
         
         generation = ChatGeneration(message=AIMessage(content=response))
         return ChatResult(generations=[generation])
+
+    # CrewAI 0.100+ native custom LLM requirements:
+    def call(self, messages: List[Any], callbacks: List[Any] = [], **kwargs: Any) -> str:
+        """Fallback method called directly by some internal CrewAI utilities."""
+        # Convert dictionaries or raw strings to BaseMessage format expected by _generate
+        formatted_messages = []
+        for msg in messages:
+            if hasattr(msg, "content"):
+                formatted_messages.append(msg)
+            elif isinstance(msg, dict) and "content" in msg:
+                role = msg.get("role", "user")
+                formatted_messages.append(AIMessage(content=msg["content"]))
+            elif isinstance(msg, str):
+                formatted_messages.append(AIMessage(content=msg))
+                
+        result = self._generate(messages=formatted_messages, **kwargs)
+        return result.generations[0].message.content
+        
+    def supports_stop_words(self) -> bool:
+        return False
