@@ -53,7 +53,20 @@ def create_coding_crew(
         executor._run(f'git commit -m "{message}"')
         return executor._run("git push")
 
-    dev_tools = [execution_tool]
+    @tool("WriteFileTool")
+    def write_file(filepath: str, content: str) -> str:
+        """Writes content to a file at the specified path. Useful for creating markdown documentation or new code files."""
+        import os
+        try:
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(filepath) or '.', exist_ok=True)
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(content)
+            return f"Successfully wrote to {filepath}"
+        except Exception as e:
+            return f"Failed to write to {filepath}: {str(e)}"
+
+    dev_tools = [execution_tool, write_file]
     git_tools = [execution_tool, github_tool, git_commit_push]
 
     # 4. Define Agents
@@ -71,13 +84,14 @@ def create_coding_crew(
     
     software_architect = Agent(
         role="Senior Software Architect",
-        goal="Design the architecture and project structure for the app based on requirements.",
+        goal="Design the architecture and project structure for the app, and document all your decisions in markdown files.",
         backstory="You are an expert system architect specializing in Flutter and C# .NET backends. "
-                  "You decide the directory structures, frameworks, and patterns to build highly scalable systems.",
+                  "You decide the directory structures, frameworks, and patterns to build highly scalable systems. "
+                  "You ALWAYS use your WriteFileTool to generate '.md' documentation files capturing your concepts, decisions, and system blueprints.",
         allow_delegation=True,
         verbose=True,
         llm=llm_planner,
-        tools=[]
+        tools=[write_file]
     )
     
     senior_developer = Agent(
@@ -126,9 +140,9 @@ def create_coding_crew(
 
     coding_task = Task(
         description="Implement the architecture. First, initialize the git repository and project skeletons via local commands. "
-                    "Then implement the core features as defined by the architect. Use your execution tool to BUILD and TEST "
-                    "the code constantly.",
-        expected_output="A fully built and compiling codebase with initial unit tests passing.",
+                    "Then implement the core features as defined by the architect. Use your WriteFileTool to document specific developer decisions or API contracts in markdown files "
+                    "before writing the actual code. Finally, use your execution tool to BUILD and TEST the code constantly.",
+        expected_output="A fully built and compiling codebase with initial unit tests passing, along with markdown documentation of developer choices.",
         agent=senior_developer
     )
 
