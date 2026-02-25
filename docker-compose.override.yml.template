@@ -1,0 +1,28 @@
+services:
+  local-coding-crew:
+    environment:
+      # MQTT Connection
+      - MQTT_BROKER=tower
+      - MQTT_PORT=1883
+      - MQTT_USER=smarthomebobby
+      - MQTT_PASSWORD=yourPassword123
+      
+      # MQTT Topics
+      - MQTT_TOPIC_REQUEST=smarthomebobby/llm/request
+      - MQTT_TOPIC_RESPONSE=smarthomebobby/llm/response
+      - MQTT_TOPIC_DECISION_REQUEST=smarthomebobby/crewai/decision/request
+      - MQTT_TOPIC_DECISION_RESPONSE=smarthomebobby/crewai/decision/response
+      
+      # CrewAI Project Goal
+      - PROJECT_GOAL="program an app for tracking chores for couples"
+      
+      # Technical Details (Architecture, Constraints, Specific API choices)
+      - TECHNICAL_DETAILS="Must use SQLite for local caching. All API calls must include a correlation ID header. Do not ask for user's age."
+      
+      # GitHub Credentials (if using tools that leverage github API natively)
+      # - GITHUB_TOKEN=your_github_personal_access_token_here
+      
+      # To persist output to the host machine uncomment the below lines
+      # and the corresponding volume map in docker-compose.yml
+    volumes:
+      - /mnt/user/appdata/SmartHomeBobby/codingCrewModule/outputs:/app/generated_projects

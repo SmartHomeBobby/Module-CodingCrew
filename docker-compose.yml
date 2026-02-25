@@ -1,0 +1,13 @@
+services:
+  local-coding-crew:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: local_coding_crew
+    restart: "no" # CrewAI tasks run until completion normally
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TECHNICAL_DETAILS=${TECHNICAL_DETAILS:-}
+    # Volumes could be mapped if you want the generated code persisted outside the container
+    # volumes:
+    #   - ./output:/app/generated_projects
