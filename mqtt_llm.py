@@ -30,11 +30,13 @@ class MQTTLLM(BaseChatModel):
         run_manager: Optional[Any] = None,
         **kwargs: Any,
     ) -> ChatResult:
+        import time
         # Compile messages into a single prompt string for the custom LLM Module
         prompt = "\n".join(
             [f"{msg.type.capitalize()}: {msg.content}" for msg in messages])
 
-        logger.debug(f"Sending prompt to LLM via MQTT: {prompt[:100]}...")
+        start_time = time.time()
+        logger.info(f"Sending prompt to LLM via MQTT at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))}...")
         response = self.mqtt_handler.ask_llm(
             topic=self.request_topic,
             request_text=prompt,
@@ -42,6 +44,8 @@ class MQTTLLM(BaseChatModel):
             priority=self.priority,
             timeout=self.timeout
         )
+        duration = time.time() - start_time
+        logger.info(f"LLM response received. Took {duration:.2f} seconds.")
 
         # Manually enforce stop words since MQTT payload doesn't support them natively
         if stop is not None and len(stop) > 0 and response:

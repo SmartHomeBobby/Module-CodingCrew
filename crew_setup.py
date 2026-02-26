@@ -163,12 +163,32 @@ def create_coding_crew(
         agent=data_privacy_officer
     )
 
+    def task_completed_callback(task_output):
+        import time
+        logger.info(f"Task completed at {time.strftime('%Y-%m-%d %H:%M:%S')}. Description: {getattr(task_output, 'description', 'Unknown task')}")
+
+    def agent_step_callback(step_output):
+        import time
+        logger.info(f"Agent step executed at {time.strftime('%Y-%m-%d %H:%M:%S')}.")
+
+    product_owner.step_callback = agent_step_callback
+    software_architect.step_callback = agent_step_callback
+    senior_developer.step_callback = agent_step_callback
+    quality_assurance.step_callback = agent_step_callback
+    data_privacy_officer.step_callback = agent_step_callback
+
+    for t in [planning_task, coding_task, qa_task, privacy_audit_task]:
+        t.callback = task_completed_callback
+
     # 6. Assemble the Crew
     crew = Crew(
         agents=[product_owner, software_architect, senior_developer, quality_assurance, data_privacy_officer],
         tasks=[planning_task, coding_task, qa_task, privacy_audit_task],
         process=Process.sequential,
-        verbose=True
+        verbose=True,
+        task_callback=task_completed_callback,
+        step_callback=agent_step_callback
     )
 
     return crew
+
