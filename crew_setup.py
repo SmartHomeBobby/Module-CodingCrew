@@ -139,7 +139,8 @@ def create_coding_crew(
     )
 
     coding_task = Task(
-        description="Implement the architecture. First, initialize the git repository and project skeletons via local commands. "
+        description="Implement the architecture. First, explicitly create any necessary directories using `mkdir` or frameworks (`flutter create .`, `dotnet new webapi`). "
+                    "Only after the directories exist should you use your execution tools inside them. "
                     "Then implement the core features as defined by the architect. Use your WriteFileTool to document specific developer decisions or API contracts in markdown files "
                     "before writing the actual code. Finally, use your execution tool to BUILD and TEST the code constantly.",
         expected_output="A fully built and compiling codebase with initial unit tests passing, along with markdown documentation of developer choices.",

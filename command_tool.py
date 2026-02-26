@@ -17,12 +17,19 @@ class CommandExecutionTool(BaseTool):
     """
     name: str = "CommandExecutionTool"
     description: str = (
-        "Use this tool to compile code, run tests, or execute scripts on your local system to verify "
-        "your work before committing to GitHub. You have access to `dotnet` and `flutter` commands."
+        "Use this tool to execute shell commands locally inside the Docker container. "
+        "You can use it to create project skeletons (`flutter create .`, `dotnet new webapi`), "
+        "compile code (`dotnet build`), or run tests (`flutter test`). "
+        "IMPORTANT: If you specify a `cwd` (working directory), it MUST already exist. "
+        "Always ensure you have created the directories or initialized the project *before* running commands inside them."
     )
     args_schema: Type[BaseModel] = CommandExecutionInput
 
     def _run(self, command: str, cwd: str = None) -> str:
+        import os
+        if cwd and not os.path.exists(cwd):
+            return f"Error: The directory '{cwd}' does not exist. You must create the folder or initialize the project first before setting it as the working directory."
+            
         logger.info(f"Agent executing command: {command} in {cwd or 'current directory'}")
         try:
             result = subprocess.run(

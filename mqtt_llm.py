@@ -55,6 +55,38 @@ class MQTTLLM(BaseChatModel):
                     f"Truncated response from len {len(response)} to {first_stop_idx} due to stop word")
                 response = response[:first_stop_idx]
 
+        # Fix hallucinated "Repaired JSON: " and JSON arrays 
+        import re
+        import json
+        
+        # 1. Remove "Repaired JSON:" prefix explicitly if it exists anywhere
+        response = response.replace("Repaired JSON:", "").strip()
+        
+        # 2. Check if the response contains Action Input: [...]
+        # The agent sometimes generates multiple list elements instead of one dict.
+        pattern = r"(Action Input:\s*)(\[.*?\])\s*(?=\n|$)"
+        match = re.search(pattern, response, flags=re.DOTALL)
+        if match:
+            prefix = match.group(1)
+            json_array_str = match.group(2)
+            try:
+                arr = json.loads(json_array_str)
+                if isinstance(arr, list) and len(arr) > 0 and isinstance(arr[0], dict):
+                    first_obj_str = json.dumps(arr[0])
+                    response = response[:match.start()] + prefix + first_obj_str + response[match.end():]
+            except json.JSONDecodeError:
+                pass
+                
+        # 3. Check if the entire response is just a JSON array (e.g. function calling hallucination)
+        response = response.strip()
+        if response.startswith("[") and response.endswith("]"):
+            try:
+                arr = json.loads(response)
+                if isinstance(arr, list) and len(arr) > 0 and isinstance(arr[0], dict):
+                    response = json.dumps(arr[0])
+            except json.JSONDecodeError:
+                pass
+
         if not response:
             response = "Error: Invalid or empty response from MQTT LLM layer."
 
