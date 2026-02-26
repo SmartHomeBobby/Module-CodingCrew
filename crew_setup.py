@@ -133,15 +133,20 @@ def create_coding_crew(
         description=f"Analyze the project goal: '{project_goal}'. Consider all these technical details: '{technical_details}'. "
                     "Decide on the tech stack (e.g. Flutter frontend, C# backend), database storage strategy, and API contracts. "
                     "Collaborate tightly with the Privacy Officer to establish a 'Need-to-Know' data handling policy from the start. "
-                    "Ask the Product Owner for clarification on any missing product requirements regarding user onboarding or features.",
+                    "Ask the Product Owner for clarification on any missing product requirements regarding user onboarding or features. "
+                    "CRITICAL: First use your Terminal execution tool to run `ls -la` to check if a project codebase already exists! "
+                    "If the codebase exists, read the existing architecture and plan features or bug fixes rather than writing a brand new architecture.",
         expected_output="A detailed architecture markdown document along with a clear setup script blueprint that respects privacy.",
         agent=software_architect
     )
 
     coding_task = Task(
-        description="Implement the architecture. First, explicitly create any necessary directories using `mkdir` or frameworks (`flutter create .`, `dotnet new webapi`). "
-                    "Only after the directories exist should you use your execution tools inside them. "
-                    "Then implement the core features as defined by the architect. Use your WriteFileTool to document specific developer decisions or API contracts in markdown files "
+        description="Implement the architecture. "
+                    "CRITICAL: Use your Terminal execution tool to check if the scaffolding directories exist. "
+                    "If scaffolding already exists, DO NOT run `dotnet new` or `flutter create` as it will wipe existing work. "
+                    "Only explicitly create any necessary directories using `mkdir` or frameworks (`flutter create .`, `dotnet new webapi`) if the project is completely empty. "
+                    "Then implement the core features as defined by the architect or modify existing features if the codebase is already established. "
+                    "Use your WriteFileTool to document specific developer decisions or API contracts in markdown files "
                     "before writing the actual code. Finally, use your execution tool to BUILD and TEST the code constantly.",
         expected_output="A fully built and compiling codebase with initial unit tests passing, along with markdown documentation of developer choices.",
         agent=senior_developer
