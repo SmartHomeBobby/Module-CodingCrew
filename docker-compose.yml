@@ -8,6 +8,6 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - TECHNICAL_DETAILS=${TECHNICAL_DETAILS:-}
-    # Volumes could be mapped if you want the generated code persisted outside the container
-    # volumes:
-    #   - ./output:/app/generated_projects
+    # Volumes are mapped so generated code is persisted outside the container
+    volumes:
+      - ./generated_projects:/app/generated_projects

@@ -28,6 +28,14 @@ def main():
     
     logger.info("Starting localCodingCrewModule...")
     
+    # Ensure agent file outputs land in the mounted volume instead of the /app script root
+    output_dir = "/app/generated_projects"
+    os.makedirs(output_dir, exist_ok=True)
+    if os.getcwd() not in sys.path:
+        sys.path.append(os.getcwd())
+    os.chdir(output_dir)
+    logger.info(f"Changed working directory to {output_dir}")
+    
     # 2. Init and Start MQTT Handler Thread
     mqtt = MQTTHandler(
         broker=mqtt_broker,
