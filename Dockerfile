@@ -54,11 +54,9 @@ COPY . /app
 # Change ownership of /app to crew_user
 RUN chown -R crew_user:crew_user /app
 
-# Switch to the non-root user
-USER crew_user
+# Ensure entrypoint is executable
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
-# Disable flutter analytics
-RUN flutter config --no-analytics
-
-# Run the Crew AI application
-CMD ["python3", "main.py"]
+# Run the entrypoint script as root to fix mount permissions before launching the app
+ENTRYPOINT ["/app/entrypoint.sh"]
