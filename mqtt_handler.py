@@ -131,7 +131,7 @@ class MQTTHandler:
                 return resp.get("Response", resp.get("response", ""))
             else:
                 logger.error(f"LLM request timed out after {timeout}s")
-                return "Error: LLM request timed out."
+                return ""
         except Exception as e:
             logger.error(f"Failed to parse completed LLM request: {e}")
             return ""

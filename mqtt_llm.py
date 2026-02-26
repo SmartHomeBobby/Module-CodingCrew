@@ -36,7 +36,7 @@ class MQTTLLM(BaseChatModel):
             [f"{msg.type.capitalize()}: {msg.content}" for msg in messages])
 
         start_time = time.time()
-        logger.info(f"Sending prompt to LLM via MQTT at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))}...")
+        logger.info(f"Sending prompt to LLM via MQTT at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))}...\n--- PROMPT START ---\n{prompt}\n--- PROMPT END ---")
         response = self.mqtt_handler.ask_llm(
             topic=self.request_topic,
             request_text=prompt,
@@ -91,8 +91,6 @@ class MQTTLLM(BaseChatModel):
             except json.JSONDecodeError:
                 pass
 
-        if not response:
-            response = "Error: Invalid or empty response from MQTT LLM layer."
 
         generation = ChatGeneration(message=AIMessage(content=response))
         return ChatResult(generations=[generation])
