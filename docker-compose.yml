@@ -35,17 +35,9 @@ services:
           memory: 16G
 
   # OpenWebUI für einfache Modell-Verwaltung (optional)
-  open-webui:
-    image: ghcr.io/open-webui/open-webui:main
-    ports: ["3000:8080"]
-    volumes: [/mnt/user/appdata/webui:/app/backend/data]
-    environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
-    depends_on: [ollama]
-
-    
   openwebui:
     image: ghcr.io/open-webui/open-webui:main
+    container_name: webui-unraid
     ports: ["8911:8080"]
     volumes: ["/mnt/user/appdata/webui:/app/backend/data"]
     environment:
