@@ -51,19 +51,20 @@ services:
     image: searxng/searxng:latest
     container_name: searxng-unraid
     ports:
-      - "8181:8080"  # http://your-unraid-ip:8181
+      - "8381:8080"
     volumes:
       - /mnt/user/appdata/searxng:/etc/searxng:rw
       - searxng-cache:/var/cache/searxng:rw
     environment:
       - TZ=Europe/Berlin
       - SEARXNG_BIND_ADDRESS=0.0.0.0
+      - PUID=99  # Unraid nobody
+      - PGID=100 # Unraid users
+    user: "977:977"  # SearxNG user
     cap_add:
       - CHOWN
       - SETGID
       - SETUID
-    cap_drop:
-      - ALL
     restart: unless-stopped
     networks:
       - webui-net
