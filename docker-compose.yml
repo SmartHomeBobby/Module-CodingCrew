@@ -57,4 +57,4 @@ services:
       - CONTINUE_OLLAMA_BASE=http://ollama:11434
       - CONTINUE_MODEL=deepseek-coder:6.7b
     depends_on:
-      - ollama-unraid
+      - ollama
